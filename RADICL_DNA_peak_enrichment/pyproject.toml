@@ -1,0 +1,13 @@
+[tool.poetry]
+name = "RADICL_DNA_peak_enrichment"
+version = "0.0.1"
+description = "Examining the RADICL hotspot enrichment at the DNA and RNA ends"
+authors = ["Vipin Kumar <princeps091@gmail.com>"]
+
+[tool.poetry.dependencies]
+python = ">=3.10"
+pathlib = "^1.0.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

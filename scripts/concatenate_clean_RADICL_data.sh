@@ -1,0 +1,1 @@
+cat /home/vipink/Documents/FANTOM6/alternative_filter_blacklist_pipeline/workflow/data/processed/chr/*.txt > /home/vipink/Documents/FANTOM6/RADICL_DNA_peak_enrichment/data/processed/IPSC_replicate1_clean_RADICL.txt
