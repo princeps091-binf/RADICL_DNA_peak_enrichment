@@ -5,6 +5,8 @@ import bioframe as bf
 from os import listdir
 import re
 import hvplot.pandas
+from scipy.stats import chi2_contingency
+
 #%%
 sample = "IPSC_replicate1"
 peak_read_list_file = f"/home/vipink/Documents/FANTOM6/RADICL_DNA_peak_enrichment/data/processed/{sample}_peak_read_list.pkl"
@@ -46,9 +48,9 @@ def get_gene_class_read_count(gene_df,gene_Class,read_df):
 chr_set = np.unique(np.array([re.split("_|\.",f)[6] for f in listdir(clean_RADICL_by_RNA_folder)])) 
 gene_Classes = gene_df.geneClass.drop_duplicates().to_list()
 # %%
-
+dfs = []
 for chromo in chr_set:
-    #%%
+    print(chromo)
     chr_read_df = (pd.read_csv(f"{clean_RADICL_by_RNA_folder}{sample}_clean_RADICL_by_RNA_{chromo}.txt",
                              sep="\t",
                              header=None,
@@ -61,13 +63,40 @@ for chromo in chr_set:
                                         5:'strand'
                              }))
     
-    #%%
     peak_read_df = chr_read_df.query('RNA_ID in @peak_read_list')
-    #%%
-    peak_count_df = (pd.concat([get_gene_class_read_count(gene_df.query("chrom == @chromo"),gene_class,peak_read_df) for gene_class in gene_Classes])
+    chr_gene_classes = gene_df.query("chrom == @chromo").geneClass.drop_duplicates().to_list()
+    peak_count_df = (pd.concat([get_gene_class_read_count(gene_df.query("chrom == @chromo"),gene_class,peak_read_df) for gene_class in chr_gene_classes])
      .assign(read_set="peak",chrom=chromo))
-    chr_count_df = (pd.concat([get_gene_class_read_count(gene_df.query("chrom == @chromo"),gene_class,chr_read_df) for gene_class in gene_Classes])
+    chr_count_df = (pd.concat([get_gene_class_read_count(gene_df.query("chrom == @chromo"),gene_class,chr_read_df) for gene_class in chr_gene_classes])
      .assign(read_set="all",chrom=chromo))
-    
+    chr_summary_df = pd.concat([peak_count_df,chr_count_df,]).reset_index()
+    dfs.append(chr_summary_df)
+
+# %%
+genome_count_tbl = (pd.concat(dfs)
+ .groupby(['io','anno','read_set'])
+ .agg(nread=('count','sum'))
+ .reset_index())
+# %%
+genome_geneClasses = genome_count_tbl.anno.drop_duplicates().to_list()
+# %%
+tmpClass = genome_geneClasses[0]
+# %%
+def compute_OR(tmpClass,genome_count_tbl):
+    peak_in = int(genome_count_tbl.query("anno == @tmpClass").query("read_set == 'peak' & io == 'in'").nread.to_numpy())
+    peak_out = int(genome_count_tbl.query("anno == @tmpClass").query("read_set == 'peak' & io == 'out'").nread.to_numpy())
+    all_in = int(genome_count_tbl.query("anno == @tmpClass").query("read_set == 'all' & io == 'in'").nread.to_numpy())
+    all_out = int(genome_count_tbl.query("anno == @tmpClass").query("read_set == 'all' & io == 'out'").nread.to_numpy())
+    return((peak_in/(peak_in+peak_out))/(all_in/(all_in+all_out)))
+#%%
+pd.DataFrame({
+    "GeneClass":genome_geneClasses,
+    "OR":[compute_OR(tmpClass,genome_count_tbl) for tmpClass in genome_geneClasses]})
+#%%
+obs = np.array([[peak_in, all_in], [peak_out, all_out]])
+res = chi2_contingency(obs)
+print((peak_in/(peak_in+peak_out))/(all_in/(all_in+all_out)))
+print(res[1])
+print(peak_in/(all_in+all_out))
 
 # %%
