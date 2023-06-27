@@ -8,7 +8,7 @@ import pickle
 RADICL_folder = "/home/vipink/Documents/FANTOM6/alternative_filter_blacklist_pipeline/workflow/data/processed/chr/"
 read_folder = "/home/vipink/Documents/FANTOM6/alternative_filter_blacklist_pipeline/workflow/data/processed/DNA/chr/"
 peak_folder = "/home/vipink/Documents/FANTOM6/alternative_filter_blacklist_pipeline/workflow/data/results/DNA/"
-sample = "IPSC_replicate1"
+sample = "Neuron_replicate1"
 out_file = f"/home/vipink/Documents/FANTOM6/RADICL_DNA_peak_enrichment/data/processed/{sample}_peak_read_list.pkl"
 #%%
 peak_df = (pd.read_csv(f"{peak_folder}{sample}/{sample}_all_peak.bed",sep="\t",header=None,usecols=[0,1,2],dtype={

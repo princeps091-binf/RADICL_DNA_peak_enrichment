@@ -32,7 +32,6 @@ chr_set = np.unique(np.array([re.split("_|\.",f)[6] for f in listdir(clean_RADIC
 dfs = []
 for chromo in chr_set:
     print(chromo)
-    #%%
     chr_read_df = (pd.read_csv(f"{clean_RADICL_by_RNA_folder}{sample}_clean_RADICL_by_RNA_{chromo}.txt",
                              sep="\t",
                              header=None,
@@ -45,14 +44,11 @@ for chromo in chr_set:
                                         5:'strand'
                              }))
     peak_read_df = chr_read_df.query('RNA_ID in @peak_read_list')
-    #%%
     all_count = bf.count_overlaps(gene_df.query("chrom == @chromo"),chr_read_df,on=['strand'])
     peak_count = bf.count_overlaps(gene_df.query("chrom == @chromo"),peak_read_df,on=['strand']).rename(columns={
         'count':'peak_count'
     })
-    #%%
     chr_count_df = all_count.merge(peak_count,how='left')
-    #%%
     dfs.append(chr_count_df)
 #%%
 genome_count = pd.concat(dfs)
@@ -78,4 +74,13 @@ genome_count = pd.concat(dfs)
 
  .hvplot.scatter(x='log_all_count',y='log_peak_count',alpha=0.1,size=0.1))
 
+# %%
+(genome_count
+ .query("count > 0")
+ .query("peak_count > 0")
+ .shape[0])/(
+genome_count
+ .query("count > 0")
+ .shape[0]
+ )
 # %%
