@@ -13,6 +13,8 @@ cre_file = "/home/vipink/Documents/FANTOM6/data/annotation/GRCh38-cCREs.bed"
 enh_file = "/home/vipink/Documents/FANTOM6/data/annotation/GRCh38-ELS.bed"
 peak_folder = "/home/vipink/Documents/FANTOM6/alternative_filter_blacklist_pipeline/workflow/data/results/DNA/"
 sample = "IPSC_replicate1"
+idr_peak_file = "/home/vipink/Documents/FANTOM6/RADICL_seq_reproducibility/data/processed/idr_data/idr_540_union_Neuron1_Neuron2.bed"
+neuron_screen_file = "/home/vipink/Documents/FANTOM6/data/annotation/ENCFF867UBO_ENCFF047MUX.7group_neuron.bed"
 #%%
 # load the annotation tables
 transcript_annotation_df = pd.read_csv(transcript_annotation_file,delimiter="\t")
@@ -67,7 +69,29 @@ cre_df = (pd.read_csv(cre_file,sep="\t",header=None,dtype = {
     4:'ID2',
     5:'label'
 }))
-
+#%%
+neuron_cre_df = (pd.read_csv(neuron_screen_file,sep="\t",header=None,dtype = {
+    0:str,
+    1:int,
+    2:int,
+    3:str,
+    4:int,
+    5:str,
+    6:int,
+    7:int,
+    8:str,
+    9:str,
+    10:str
+})
+.rename(columns={
+    0:'chrom',
+    1:'start',
+    2:'end',
+    3:'ID1',
+    4:'score',
+    5:'strand',
+    9:'label'
+}))
 # %%
 # load the peak table
 # %%
@@ -81,6 +105,18 @@ peak_df = (pd.read_csv(f"{peak_folder}{sample}/{sample}_all_peak.bed",sep="\t",h
     1:'start',
     2:'end'
 }))
+#%%
+peak_df = (pd.read_csv(idr_peak_file,sep="\t",header=None,usecols=[0,1,2],dtype={
+    0:str,
+    1:int,
+    2:int
+})
+.rename(columns={
+    0:'chrom',
+    1:'start',
+    2:'end'
+}))
+
 #%%
 chr_set = peak_df.chrom.drop_duplicates().to_list()
 #%%
@@ -121,7 +157,7 @@ def produce_anno_read_count(read_folder,sample,chr_set,peak_df,anno_df):
     return (count_tbl)
 
 #%%
-count_tbl = produce_anno_read_count(read_folder,sample,chr_set,peak_df,cre_df)
+count_tbl = produce_anno_read_count(read_folder,sample,chr_set,peak_df,neuron_cre_df.query("label =='High-H3K27ac'"))
 #%%
 genome_summary = count_tbl.groupby(['set','io']).agg(nread=('count','sum')).reset_index()
 plot = (genome_summary
